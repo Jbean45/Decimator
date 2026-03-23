@@ -268,6 +268,7 @@
       const studentAnswer = Number(value);
       const currentProblem = problems[currentProblemIndex];
       const isCorrect = nearlyEqual(studentAnswer, currentProblem.answer);
+      const roundingIssue = isRoundingIssue(studentAnswer, currentProblem.answer);
 
       if (isCorrect) {
         feedback.textContent = 'Correct! Great job.';
@@ -285,6 +286,10 @@
 
         moveToNextProblem();
       } else {
+        if (roundingIssue) {
+          feedback.textContent = 'Close! You were off due to rounding. Remember to round to the nearest hundredth.';
+          feedback.className = 'feedback wrong';
+        }
         if (currentAttempt < MAX_ATTEMPTS) {
           feedback.textContent = 'Wrong. Try again.';
           feedback.className = 'feedback wrong';
@@ -392,6 +397,13 @@
 
     function nearlyEqual(a, b) {
       return Math.abs(a - b) < 0.01;
+    }
+
+    function isRoundingIssue(a, b) {
+      // Check if correct when rounded but not exact
+      const roundedA = Math.round(a * 100) / 100;
+      const roundedB = Math.round(b * 100) / 100;
+      return roundedA === roundedB && Math.abs(a - b) >= 0.01;
     }
   </script>
 </body>
