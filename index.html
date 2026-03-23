@@ -283,10 +283,16 @@
 
     startBtn.addEventListener('click', startPractice);
     submitBtn.addEventListener('click', submitAnswer);
-    restartBtn.addEventListener('click', startPractice);
+    restartBtn.addEventListener('click', restartToStart);
     answerInput.addEventListener('keydown', function (event) {
       if (event.key === 'Enter') submitAnswer();
     });
+
+    function restartToStart() {
+      reviewScreen.classList.add('hidden');
+      quizScreen.classList.add('hidden');
+      startScreen.classList.remove('hidden');
+    }
 
     function startPractice() {
       selectedDifficulty = difficultySelect.value;
@@ -312,9 +318,8 @@
       answerInput.value = '';
       feedback.textContent = '';
       feedback.className = 'feedback';
-      resultBox.classList.add('hidden');
-      resultBox.textContent = '';
       resultBox.className = 'result-box hidden';
+      resultBox.textContent = '';
       answerInput.focus();
     }
 
@@ -333,7 +338,6 @@
 
       if (isCorrect) {
         correctAnswers++;
-
         results.push({
           number: currentProblemIndex + 1,
           problem: currentProblem.question,
@@ -343,43 +347,37 @@
           result: 'Correct'
         });
 
-        // Show green box then move on
         resultBox.textContent = 'Correct!';
         resultBox.className = 'result-box result-correct';
         setTimeout(moveToNextProblem, 900);
         return;
       }
-      } else {
-        if (roundingIssue) {
-          feedback.textContent = 'Close! You were off due to rounding. Remember to round to the nearest hundredth.';
-          feedback.className = 'feedback wrong';
-        }
-        if (currentAttempt < MAX_ATTEMPTS) {
-          if (roundingIssue) {
-            feedback.textContent = 'Close! You were off due to rounding. Round to the nearest hundredth.';
-          } else {
-            feedback.textContent = 'Wrong. Try again.';
-          }
-          feedback.className = 'feedback wrong';
-          currentAttempt++;
-          attemptCount.textContent = currentAttempt;
-          answerInput.select();
-        } else {
-          results.push({
-            number: currentProblemIndex + 1,
-            problem: currentProblem.question,
-            studentAnswer: studentAnswer.toFixed(2),
-            correctAnswer: currentProblem.answer.toFixed(2),
-            attempts: currentAttempt,
-            result: 'Wrong'
-          });
 
-          // Show red box then move on
-          resultBox.textContent = `Wrong. Correct: ${currentProblem.answer.toFixed(2)}`;
-          resultBox.className = 'result-box result-wrong';
-          setTimeout(moveToNextProblem, 1200);
+      if (currentAttempt < MAX_ATTEMPTS) {
+        if (roundingIssue) {
+          feedback.textContent = 'Close! You were off due to rounding. Round to the nearest hundredth.';
+        } else {
+          feedback.textContent = 'Wrong. Try again.';
         }
+        feedback.className = 'feedback wrong';
+        currentAttempt++;
+        attemptCount.textContent = currentAttempt;
+        answerInput.select();
+        return;
       }
+
+      results.push({
+        number: currentProblemIndex + 1,
+        problem: currentProblem.question,
+        studentAnswer: studentAnswer.toFixed(2),
+        correctAnswer: currentProblem.answer.toFixed(2),
+        attempts: currentAttempt,
+        result: 'Wrong'
+      });
+
+      resultBox.textContent = `Wrong. Correct: ${currentProblem.answer.toFixed(2)}`;
+      resultBox.className = 'result-box result-wrong';
+      setTimeout(moveToNextProblem, 1200);
     }
 
     function moveToNextProblem() {
@@ -470,9 +468,8 @@
     }
 
     function isRoundingIssue(a, b) {
-      // Check if correct when rounded but not exact
-      const roundedA = Math.round(a * 100) / 100;
-      const roundedB = Math.round(b * 100) / 100;
+      const roundedA = round2(a);
+      const roundedB = round2(b);
       return roundedA === roundedB && Math.abs(a - b) >= 0.01;
     }
   </script>
