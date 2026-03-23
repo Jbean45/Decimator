@@ -85,10 +85,27 @@
     button:hover { background: var(--accent-dark); }
     button.secondary { background: #64748b; }
 
-    .feedback {
-      min-height: 28px;
-      font-weight: bold;
-      margin-top: 12px;
+    .feedback { display:none; }
+
+    .result-box {
+      margin-top: 16px;
+      padding: 16px;
+      border-radius: 14px;
+      font-weight: 700;
+      text-align: center;
+      font-size: 1.1rem;
+    }
+
+    .result-correct {
+      background: #dcfce7;
+      border: 1px solid #86efac;
+      color: #166534;
+    }
+
+    .result-wrong {
+      background: #fee2e2;
+      border: 1px solid #fecaca;
+      color: #991b1b;
     }
 
     .correct { color: var(--good); }
@@ -138,14 +155,23 @@
     <div id="startScreen" class="card">
       <h1>Decimal Math Practice</h1>
       <p class="muted">
-        Practice multiplying and dividing decimals with 3-digit numbers. You will get 20 problems, up to 3 tries per problem, and a review page at the end. Be sure to round your answers to the nearest hundredth (two decimal places).
+        Practice multiplying and dividing decimals. You will get 20 problems,
+        up to 3 tries per problem, and a review page at the end. Be sure to round your answers to the nearest hundredth (two decimal places).
       </p>
       <ul>
-        <li>3-digit numbers only</li>
+        <li>Choose Easy, Medium, or Hard</li>
         <li>Decimal multiplication and division</li>
         <li>No repeated problems</li>
         <li>20 total problems</li>
       </ul>
+      <div class="row" style="margin: 16px 0 18px 0;">
+        <label for="difficultySelect"><strong>Difficulty:</strong></label>
+        <select id="difficultySelect" style="padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border); font-size: 1rem;">
+          <option value="easy">Easy</option>
+          <option value="medium" selected>Medium</option>
+          <option value="hard">Hard</option>
+        </select>
+      </div>
       <button id="startBtn">Start Practice</button>
     </div>
 
@@ -164,6 +190,7 @@
       </div>
 
       <div id="feedback" class="feedback"></div>
+      <div id="resultBox" class="result-box hidden"></div>
       <p class="muted">Tip: Always round your answer to the nearest hundredth (2 decimal places).</p>
     </div>
 
@@ -199,11 +226,39 @@
     const TOTAL_PROBLEMS = 20;
     const MAX_ATTEMPTS = 3;
 
+    const difficultySettings = {
+      easy: {
+        name: 'Easy',
+        multiplicandMin: 10,
+        multiplicandMax: 100,
+        quotientMin: 2,
+        quotientMax: 20,
+        decimalPlaces: 1
+      },
+      medium: {
+        name: 'Medium',
+        multiplicandMin: 100,
+        multiplicandMax: 1000,
+        quotientMin: 10,
+        quotientMax: 100,
+        decimalPlaces: 2
+      },
+      hard: {
+        name: 'Hard',
+        multiplicandMin: 1000,
+        multiplicandMax: 10000,
+        quotientMin: 20,
+        quotientMax: 200,
+        decimalPlaces: 2
+      }
+    };
+
     let problems = [];
     let results = [];
     let currentProblemIndex = 0;
     let currentAttempt = 1;
     let correctAnswers = 0;
+    let selectedDifficulty = 'medium';
 
     const startScreen = document.getElementById('startScreen');
     const quizScreen = document.getElementById('quizScreen');
@@ -219,10 +274,12 @@
     const problemText = document.getElementById('problemText');
     const answerInput = document.getElementById('answerInput');
     const feedback = document.getElementById('feedback');
+    const resultBox = document.getElementById('resultBox');
 
     const finalCorrect = document.getElementById('finalCorrect');
     const finalScore = document.getElementById('finalScore');
     const reviewBody = document.getElementById('reviewBody');
+    const difficultySelect = document.getElementById('difficultySelect');
 
     startBtn.addEventListener('click', startPractice);
     submitBtn.addEventListener('click', submitAnswer);
@@ -232,7 +289,8 @@
     });
 
     function startPractice() {
-      problems = generateUniqueProblems(TOTAL_PROBLEMS);
+      selectedDifficulty = difficultySelect.value;
+      problems = generateUniqueProblems(TOTAL_PROBLEMS, selectedDifficulty);
       results = [];
       currentProblemIndex = 0;
       currentAttempt = 1;
@@ -254,6 +312,9 @@
       answerInput.value = '';
       feedback.textContent = '';
       feedback.className = 'feedback';
+      resultBox.classList.add('hidden');
+      resultBox.textContent = '';
+      resultBox.className = 'result-box hidden';
       answerInput.focus();
     }
 
@@ -271,8 +332,6 @@
       const roundingIssue = isRoundingIssue(studentAnswer, currentProblem.answer);
 
       if (isCorrect) {
-        feedback.textContent = 'Correct! Great job.';
-        feedback.className = 'feedback correct';
         correctAnswers++;
 
         results.push({
@@ -284,22 +343,28 @@
           result: 'Correct'
         });
 
-        moveToNextProblem();
+        // Show green box then move on
+        resultBox.textContent = 'Correct!';
+        resultBox.className = 'result-box result-correct';
+        setTimeout(moveToNextProblem, 900);
+        return;
+      }
       } else {
         if (roundingIssue) {
           feedback.textContent = 'Close! You were off due to rounding. Remember to round to the nearest hundredth.';
           feedback.className = 'feedback wrong';
         }
         if (currentAttempt < MAX_ATTEMPTS) {
-          feedback.textContent = 'Wrong. Try again.';
+          if (roundingIssue) {
+            feedback.textContent = 'Close! You were off due to rounding. Round to the nearest hundredth.';
+          } else {
+            feedback.textContent = 'Wrong. Try again.';
+          }
           feedback.className = 'feedback wrong';
           currentAttempt++;
           attemptCount.textContent = currentAttempt;
           answerInput.select();
         } else {
-          feedback.textContent = `Wrong. The correct answer was ${currentProblem.answer.toFixed(2)}.`;
-          feedback.className = 'feedback wrong';
-
           results.push({
             number: currentProblemIndex + 1,
             problem: currentProblem.question,
@@ -309,6 +374,9 @@
             result: 'Wrong'
           });
 
+          // Show red box then move on
+          resultBox.textContent = `Wrong. Correct: ${currentProblem.answer.toFixed(2)}`;
+          resultBox.className = 'result-box result-wrong';
           setTimeout(moveToNextProblem, 1200);
         }
       }
@@ -347,12 +415,12 @@
       }
     }
 
-    function generateUniqueProblems(count) {
+    function generateUniqueProblems(count, difficulty) {
       const set = new Set();
       const list = [];
 
       while (list.length < count) {
-        const problem = createRandomProblem();
+        const problem = createRandomProblem(difficulty);
         if (!set.has(problem.key)) {
           set.add(problem.key);
           list.push(problem);
@@ -362,33 +430,35 @@
       return list;
     }
 
-    function createRandomProblem() {
+    function createRandomProblem(difficulty) {
       const operationChoice = Math.floor(Math.random() * 2);
+      const settings = difficultySettings[difficulty];
       let num1, num2, answer, question, key;
 
       if (operationChoice === 0) {
-        num1 = round2(randomDecimal3Digits());
-        num2 = round2(randomDecimal3Digits());
+        num1 = roundTo(randomDecimalInRange(settings.multiplicandMin, settings.multiplicandMax), settings.decimalPlaces);
+        num2 = roundTo(randomDecimalInRange(settings.multiplicandMin, settings.multiplicandMax), settings.decimalPlaces);
         answer = round2(num1 * num2);
-        question = `${num1.toFixed(2)} × ${num2.toFixed(2)}`;
-        key = `M:${num1}:${num2}`;
+        question = `${num1.toFixed(settings.decimalPlaces)} × ${num2.toFixed(settings.decimalPlaces)}`;
+        key = `M:${difficulty}:${num1}:${num2}`;
       } else {
-        num2 = round2(randomDecimal3Digits());
-        answer = round2(randomDecimalTwoDigits());
+        num2 = roundTo(randomDecimalInRange(settings.multiplicandMin, settings.multiplicandMax), settings.decimalPlaces);
+        answer = roundTo(randomDecimalInRange(settings.quotientMin, settings.quotientMax), settings.decimalPlaces);
         num1 = round2(num2 * answer);
-        question = `${num1.toFixed(2)} ÷ ${num2.toFixed(2)}`;
-        key = `D:${num1}:${num2}`;
+        question = `${num1.toFixed(2)} ÷ ${num2.toFixed(settings.decimalPlaces)}`;
+        key = `D:${difficulty}:${num1}:${num2}`;
       }
 
       return { question, answer, key };
     }
 
-    function randomDecimal3Digits() {
-      return Math.floor(Math.random() * 900 + 100) + Math.random();
+    function randomDecimalInRange(min, max) {
+      return Math.floor(Math.random() * (max - min) + min) + Math.random();
     }
 
-    function randomDecimalTwoDigits() {
-      return Math.floor(Math.random() * 90 + 10) + Math.random();
+    function roundTo(value, places) {
+      const factor = Math.pow(10, places);
+      return Math.round(value * factor) / factor;
     }
 
     function round2(value) {
