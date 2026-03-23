@@ -160,14 +160,14 @@
     <div id="startScreen" class="card">
       <h1>Decimal Math Practice</h1>
       <p class="muted">
-        Practice multiplying and dividing decimals. You will get 20 problems,
+        Practice multiplying and dividing decimals. You will get 10 problems,
         up to 3 tries per problem, and a review page at the end. Be sure to round your answers to the nearest hundredth (two decimal places).
       </p>
       <ul>
         <li>Choose Easy, Medium, or Hard</li>
         <li>Decimal multiplication and division</li>
         <li>No repeated problems</li>
-        <li>20 total problems</li>
+        <li>10 total problems</li>
       </ul>
       <div class="row" style="margin: 16px 0 18px 0;">
         <label for="difficultySelect"><strong>Difficulty:</strong></label>
@@ -202,7 +202,7 @@
     <div id="reviewScreen" class="card hidden">
       <h2>Practice Review</h2>
       <div class="stats">
-        <div class="stat"><strong>Total Problems:</strong> 20</div>
+        <div class="stat"><strong>Total Problems:</strong> 10</div>
         <div class="stat"><strong>Correct:</strong> <span id="finalCorrect">0</span></div>
         <div class="stat"><strong>Score:</strong> <span id="finalScore">0%</span></div>
       </div>
@@ -228,7 +228,7 @@
   </div>
 
   <script>
-    const TOTAL_PROBLEMS = 20;
+    const TOTAL_PROBLEMS = 10;
     const MAX_ATTEMPTS = 3;
 
     const difficultySettings = {
