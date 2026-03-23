@@ -85,7 +85,12 @@
     button:hover { background: var(--accent-dark); }
     button.secondary { background: #64748b; }
 
-    .feedback { display:none; }
+    .feedback {
+      min-height: 28px;
+      font-weight: bold;
+      margin-top: 12px;
+      display: block;
+    }
 
     .result-box {
       margin-top: 16px;
@@ -354,15 +359,17 @@
       }
 
       if (currentAttempt < MAX_ATTEMPTS) {
-        if (roundingIssue) {
-          feedback.textContent = 'Close! You were off due to rounding. Round to the nearest hundredth.';
-        } else {
-          feedback.textContent = 'Wrong. Try again.';
-        }
-        feedback.className = 'feedback wrong';
+        resultBox.textContent = roundingIssue
+          ? 'Close! You were off due to rounding. Round to the nearest hundredth.'
+          : 'Wrong. Try again.';
+        resultBox.className = 'result-box result-wrong';
         currentAttempt++;
         attemptCount.textContent = currentAttempt;
         answerInput.select();
+        setTimeout(() => {
+          resultBox.className = 'result-box hidden';
+          resultBox.textContent = '';
+        }, 900);
         return;
       }
 
